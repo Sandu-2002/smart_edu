@@ -64,6 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '614642845835',
     projectId: 'smart-edu-34284',
     storageBucket: 'smart-edu-34284.firebasestorage.app',
+    iosClientId: '614642845835-6jav3hfiummub16qdpfc1ogbklujr49g.apps.googleusercontent.com',
     iosBundleId: 'com.example.smartEdu',
   );
 
@@ -73,6 +74,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '614642845835',
     projectId: 'smart-edu-34284',
     storageBucket: 'smart-edu-34284.firebasestorage.app',
+    iosClientId: '614642845835-6jav3hfiummub16qdpfc1ogbklujr49g.apps.googleusercontent.com',
     iosBundleId: 'com.example.smartEdu',
   );
 
@@ -85,4 +87,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'smart-edu-34284.firebasestorage.app',
     measurementId: 'G-8Q76S8WT7R',
   );
+
 }

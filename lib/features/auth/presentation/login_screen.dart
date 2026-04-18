@@ -1,9 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../../routes/route_names.dart';
-import '../../../shared/widgets/custom_button.dart';
-import '../../../shared/widgets/custom_text_field.dart';
+import 'package:smart_edu/core/services/auth_service.dart';
+import 'package:smart_edu/routes/route_names.dart';
+import 'package:smart_edu/shared/widgets/custom_button.dart';
+import 'package:smart_edu/shared/widgets/custom_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,6 +16,9 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
+
+  bool isLoading = false;
 
   @override
   void dispose() {
@@ -23,23 +27,51 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void handleLogin() {
-    final email = emailController.text.trim().toLowerCase();
+  Future<void> handleLogin() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
 
-    if (email.contains('student')) {
-      context.go(RouteNames.studentDashboard);
-    } else if (email.contains('parent')) {
-      context.go(RouteNames.parentDashboard);
-    } else if (email.contains('teacher')) {
-      context.go(RouteNames.teacherDashboard);
-    } else if (email.contains('admin')) {
-      context.go(RouteNames.adminDashboard);
-    } else {
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Use demo emails with student/parent/teacher/admin'),
-        ),
+        const SnackBar(content: Text('Enter email and password')),
       );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final route = await _authService.signInAndGetRoute(
+        email: email,
+        password: password,
+      );
+
+      if (!mounted) return;
+      context.go(route);
+    } on FirebaseAuthException catch (e) {
+      String message = 'Login failed';
+
+      if (e.code == 'user-not-found') {
+        message = 'No user found for that email';
+      } else if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        message = 'Invalid email or password';
+      } else if (e.code == 'invalid-email') {
+        message = 'Invalid email format';
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
@@ -64,20 +96,14 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 20),
             CustomButton(
-              text: 'Login',
-              onPressed: handleLogin,
+              text: isLoading ? 'Loading...' : 'Login',
+              onPressed: isLoading ? () {} : handleLogin,
             ),
             const SizedBox(height: 12),
             TextButton(
               onPressed: () => context.go(RouteNames.forgotPassword),
               child: const Text('Forgot Password?'),
             ),
-            const SizedBox(height: 20),
-            const Text('Demo:'),
-            const Text('student@gmail.com'),
-            const Text('parent@gmail.com'),
-            const Text('teacher@gmail.com'),
-            const Text('admin@gmail.com'),
           ],
         ),
       ),
